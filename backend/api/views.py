@@ -9,6 +9,7 @@ from rest_framework.decorators import permission_classes, action
 from django_ratelimit.decorators import ratelimit
 from rest_framework.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
+from services.views import enviar_correo_denuncia
 # Create your views here.
 
 class EntidadViewSet(viewsets.ModelViewSet):
@@ -100,6 +101,8 @@ class DenunciaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             self.perform_create(serializer)
+            denuncia_id = serializer.instance.id
+            enviar_correo_denuncia.delay(denuncia_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
