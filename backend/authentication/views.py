@@ -8,12 +8,13 @@ from django_ratelimit.decorators import ratelimit
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.utils.decorators import method_decorator
 
 class AuthViewSet(viewsets.ViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     
-    @ratelimit(key='ip', rate='10/m', method='POST', block=True)
+    @method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True))
     @action(detail=False, methods=['post'], permission_classes=[AllowAny] , url_path='login')
     def login(self, request):
         serializer = LoginSerializer(data=request.data)
@@ -32,7 +33,7 @@ class AuthViewSet(viewsets.ViewSet):
             return response
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @ratelimit(key='ip', rate='10/m', method='POST', block=True)
+    @method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True))
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated] , url_path='logout')
     def logout(self, request):
         try:
@@ -46,7 +47,7 @@ class AuthViewSet(viewsets.ViewSet):
         except (InvalidToken, TokenError):
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
         
-    @ratelimit(key='ip', rate='10/m', method='POST', block=True)
+    @method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True))
     @action(detail=False, methods=['post'], url_path='register', permission_classes=[AllowAny])
     def register(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -55,7 +56,7 @@ class AuthViewSet(viewsets.ViewSet):
             return Response(UserSerializer(user).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    @ratelimit(key='ip', rate='10/m', method='POST', block=True)
+    @method_decorator(ratelimit(key='ip', rate='10/m', method='POST', block=True))
     @action(detail=False, methods=['post'], url_path='refresh_token',permission_classes=[AllowAny])
     def refresh_token(self,request):
         refresh_token = request.COOKIES.get('refresh_token')
@@ -75,7 +76,7 @@ class AuthViewSet(viewsets.ViewSet):
                 status=status.HTTP_401_UNAUTHORIZED
             )
         
-    @ratelimit(key='ip', rate='10/m', method='GET', block=True)
+    @method_decorator(ratelimit(key='ip', rate='10/m', method='GET', block=True))
     @action(detail=False, methods=['get'], url_path='profile', permission_classes=[IsAuthenticated])
     def profile(self, request):
         user = request.user
@@ -86,7 +87,7 @@ class AuthViewSet(viewsets.ViewSet):
         serializer = UserSerializer(user)
         return Response(serializer.data)
     
-    @ratelimit(key='ip', rate='10/m', method='PUT', block=True)
+    @method_decorator(ratelimit(key='ip', rate='10/m', method='PUT', block=True))
     @action(detail=False, methods=['put','patch'], url_path='update-profile', permission_classes=[IsAuthenticated])
     def update_profile(self, request):
         user = request.user
