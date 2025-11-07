@@ -1,0 +1,47 @@
+* { box-sizing: border-box; }
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+:root{
+  --bg: #f6f7f9;            /* fondo app */
+  --surface: #ffffff;        /* tarjetas */
+  --text: #111111;           /* texto principal */
+  --muted: #6b7280;          /* texto secundario */
+  --primary: #42b883;        /* Vue brand green */
+  --primary-600: #359a6a;
+  --primary-700: #2c8a5e;
+  --accent: #35495e;         /* Vue dark */
+}
+html,body,#app { height:100%; margin:0; font-family: "Roboto", sans-serif; color: var(--text); background: var(--bg); }
+.container { max-width: none; margin:0; padding-left: 30px; padding-right: 30px; }
+h1,h2,h3,h4 { color: var(--text); margin:0 0 8px; }
+p { color: var(--muted); line-height:1.6; }
+a { color: inherit; }
+
+@media (max-width: 768px){
+  .container { padding-left:30px; padding-right:30px; }
+}
+
+/* Tipografía escalable para toda la landing */
+h1 { font-size: clamp(4rem, 4.8vw, 5rem); font-weight: 800; }
+h2 { font-size: clamp(3rem, 3.6vw, 2.2rem); font-weight: 650; }
+h3 { font-size: clamp(1.3rem, 2.8vw, 1.6rem); font-weight: 800; }
+h4 { font-size: clamp(1.1rem, 2.2vw, 1.2rem); font-weight: 800; }
+p  { font-size: clamp(1rem, 1.4vw, 1.08rem); }
+
+/* Botones globales */
+.btn {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-light   { background: rgba(255,255,255,0.9); color: #333; }
+/* Variante de contorno general */
+.btn-outline { background: transparent; color: var(--text); border: 2px solid var(--text); }
+
+/* Marca (para header u otras zonas si se reutiliza) */
+.brand,
+.logo-text { font-weight: 800; letter-spacing: 1.1px; }
