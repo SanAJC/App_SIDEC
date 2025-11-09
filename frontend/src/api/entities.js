@@ -17,7 +17,13 @@ export function getDenuncia(id) {
 }
 
 export function createDenuncia(payload) {
-  return api.post('/api/denuncias/', payload)
+  // Usar FormData si hay archivos, sino enviar JSON
+  const isFormData = payload instanceof FormData
+  const config = isFormData ? {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  } : {}
+  
+  return api.post('/api/denuncias/', payload, config)
 }
 
 export function updateDenuncia(id, payload) {
