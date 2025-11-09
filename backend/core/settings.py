@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -33,6 +38,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jet.dashboard',
+    'jet',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -109,9 +116,10 @@ INSTALLED_APPS += [
 
 #Cors
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
 ]
+CORS_ALLOW_CREDENTIALS = True
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
@@ -126,12 +134,23 @@ DATABASES = {
     }
 }
 
+#Configuracion SMTP
 EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+#CELERY_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Configuración para Gmail
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+
 # Backend real usado por CELERY para enviar
 CELERY_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Configurar Celery usual
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1'
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -166,9 +185,42 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+#Media
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#Django Jet
+JET_DEFAULT_THEME = 'default'
+JET_SIDE_MENU_COMPACT = True
+JET_SIDE_MENU_ITEMS =[
+    {
+        'label': 'Usuarios',
+        'app_label': 'authentication',
+        'items': [
+            {'name': 'user', 'label': 'Usuarios'},
+        ]
+    },
+    {
+        'label': 'Entidades',
+        'app_label': 'api',
+        'items': [
+            {'name': 'entidad', 'label': 'Entidades'},
+        ]
+    },
+    {
+        'label': 'Denuncias',
+        'app_label': 'api',
+        'items': [
+            {'name': 'denuncia', 'label': 'Denuncias'},
+        ]
+    },
+]
+JET_CHANGE_FORM_SIBLING_LINKS = True
