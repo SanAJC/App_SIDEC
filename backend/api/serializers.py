@@ -20,6 +20,11 @@ class DenunciaSerializer(serializers.ModelSerializer):
     correo_destino = serializers.EmailField(required=False)
     pdf = serializers.FileField(required=False)
     detalle = serializers.CharField(required=False)
+    entidad_id = serializers.PrimaryKeyRelatedField(
+        source='entidad', 
+        queryset=Entidad.objects.all(), 
+        write_only=True
+    )
     class Meta:
         model = Denuncia
         fields = '__all__'

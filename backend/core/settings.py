@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -111,8 +116,8 @@ INSTALLED_APPS += [
 
 #Cors
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    "http://localhost:8081",
+    "http://127.0.0.1:8081",
 ]
 CORS_ALLOW_CREDENTIALS = True
 # Database
@@ -129,12 +134,23 @@ DATABASES = {
     }
 }
 
+#Configuracion SMTP
 EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+#CELERY_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Configuración para Gmail
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')  
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+
 # Backend real usado por CELERY para enviar
 CELERY_EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Configurar Celery usual
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/1'
+CELERY_BROKER_URL = 'redis://127.0.0.1:6379/0'
+CELERY_RESULT_BACKEND = 'redis://127.0.0.1:6379/1'
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 

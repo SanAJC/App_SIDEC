@@ -102,6 +102,7 @@ class DenunciaViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             self.perform_create(serializer)
             denuncia_id = serializer.instance.id
+            print(f"Denuncia ID: {denuncia_id}")
             enviar_correo_denuncia.delay(denuncia_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

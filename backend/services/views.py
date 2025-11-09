@@ -15,6 +15,7 @@ def enviar_correo_denuncia(self, denuncia_id: int):
     
     # Generar PDF
     pdf_bytes = generar_pdf_denuncia(denuncia)
+    print(f"PDF generado con éxito para la denuncia {denuncia.id}")
     
     # Configurar correo
     email = EmailMessage(
@@ -25,7 +26,9 @@ def enviar_correo_denuncia(self, denuncia_id: int):
         reply_to=[denuncia.email_usuario],
     )
     email.attach(f"denuncia_{denuncia.id}.pdf", pdf_bytes, "application/pdf")
+    print(f"Adjunto PDF generado para la denuncia {denuncia.id}")
     
     # Enviar correo
     email.send()
+    print(f"Correo enviado a {denuncia.correo_destino} con éxito.")
     return f"Correo enviado a {denuncia.correo_destino} con éxito."
