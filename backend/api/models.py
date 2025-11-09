@@ -29,7 +29,7 @@ class Denuncia(models.Model):
     asunto = models.CharField(max_length=255)
     cuerpo = models.TextField()
     email_usuario = models.EmailField()  
-    detalle = models.TextField()
+    detalle = models.TextField(null=True, blank=True,default='')
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_envio = models.DateTimeField(null=True, blank=True)
     estado = models.CharField(max_length=20, choices=ESTADOS, default='pendiente')

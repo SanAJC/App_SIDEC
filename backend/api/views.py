@@ -127,7 +127,7 @@ class DenunciaViewSet(viewsets.ModelViewSet):
     @method_decorator(ratelimit(key='user', rate='10/s', method='PUT', block=True))
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.user != request.user:  
+        if instance.usuario != request.user:  
             raise PermissionDenied("No tienes permiso para editar esta denuncia.")
         serializer = self.get_serializer(instance, data=request.data)
         if serializer.is_valid():
@@ -139,7 +139,7 @@ class DenunciaViewSet(viewsets.ModelViewSet):
     @method_decorator(ratelimit(key='user', rate='10/s', method='PATCH', block=True))
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.user != request.user:  
+        if instance.usuario != request.user:  
             raise PermissionDenied("No tienes permiso para editar esta denuncia.")
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
@@ -151,7 +151,7 @@ class DenunciaViewSet(viewsets.ModelViewSet):
     @method_decorator(ratelimit(key='user', rate='10/s', method='DELETE', block=True))
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-        if instance.user != request.user:  
+        if instance.usuario != request.user:  
             raise PermissionDenied("No tienes permiso para eliminar esta denuncia.")
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
