@@ -16,6 +16,20 @@ function onRefreshed() {
   pendingRequests = []
 }
 
+function clearAuthAndRedirect() {
+  // Limpiar cualquier estado de autenticación
+  localStorage.removeItem('user')
+  sessionStorage.clear()
+  
+  // Redirigir al login solo si no estamos ya en páginas públicas
+  const currentPath = window.location.pathname
+  const publicPaths = ['/login', '/register', '/']
+  
+  if (!publicPaths.includes(currentPath)) {
+    window.location.href = '/login?session=expired'
+  }
+}
+
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -32,12 +46,27 @@ instance.interceptors.response.use(
       url.includes('/auth/users/refresh_token')
     )
 
-    if (status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+    // Si es un endpoint de auth que falla, no intentar refrescar
+    if (status === 401 && isAuthEndpoint) {
+      // Si el refresh token falló, limpiar sesión
+      if (url.includes('/auth/users/refresh_token')) {
+        clearAuthAndRedirect()
+      }
+      return Promise.reject(error)
+    }
+
+    // Para otros endpoints con 401, intentar refrescar el token
+    if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
+      // Si ya estamos refrescando, agregar a la cola
       if (isRefreshing) {
-        return new Promise((resolve) => {
-          pendingRequests.push(() => resolve(instance(originalRequest)))
+        return new Promise((resolve, reject) => {
+          pendingRequests.push(() => {
+            instance(originalRequest)
+              .then(resolve)
+              .catch(reject)
+          })
         })
       }
 
@@ -47,10 +76,14 @@ instance.interceptors.response.use(
         isRefreshing = false
         onRefreshed()
         return instance(originalRequest)
-      } catch (e) {
+      } catch (refreshError) {
         isRefreshing = false
         pendingRequests = []
-        return Promise.reject(e)
+        
+        // Si el refresh falló, limpiar sesión y redirigir
+        clearAuthAndRedirect()
+        
+        return Promise.reject(refreshError)
       }
     }
 
