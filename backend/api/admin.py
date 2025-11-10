@@ -11,10 +11,10 @@ class DenunciaAdmin(admin.ModelAdmin):
 
 @admin.register(Entidad)
 class EntidadAdmin(admin.ModelAdmin):
-    list_display = ('id', 'nombre', 'mostrar_imagen', 'created_at', 'updated_at')
+    list_display = ( 'nombre', 'mostrar_imagen', 'created_at', 'updated_at')
     list_filter = ('created_at', 'updated_at')
     search_fields = ('nombre',)
-    ordering = ('id',)
+    
 
     def mostrar_imagen(self, obj):
         if obj.logo:
