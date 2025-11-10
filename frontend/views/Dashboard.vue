@@ -22,10 +22,8 @@
         </div>
       </div>
 
-      <!-- Loading state para entidades -->
       <div v-if="loadingEntidades" class="loading-msg">Cargando entidades...</div>
       
-      <!-- Carousel de entidades -->
       <div v-else-if="entidades.length > 0" class="entity-carousel">
         <button class="nav-btn left" @click="rotate(-1)" aria-label="Anterior">‹</button>
         <TransitionGroup :name="direction === 'next' ? 'slide-left' : 'slide-right'" tag="div" class="entity-row">
@@ -46,10 +44,8 @@
           <p class="muted">Seguimiento de todas tus denuncias y quejas presentadas</p>
         </div>
 
-        <!-- Loading state para denuncias -->
         <div v-if="loadingDenuncias" class="loading-msg">Cargando denuncias...</div>
 
-        <!-- Tabla de denuncias -->
         <div v-else-if="denuncias.length > 0" class="table-wrap">
           <table class="table">
             <thead>
@@ -57,9 +53,9 @@
                 <th>Radicado</th>
                 <th>Entidad</th>
                 <th>Descripción</th>
-                <th>Fecha Inicio</th>
-                <th>Fecha Cierre</th>
+                <th>Fecha Creacion</th>
                 <th>Estado</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -68,23 +64,27 @@
                 <td>{{ denuncia.entidad?.nombre || 'N/A' }}</td>
                 <td>{{ truncate(denuncia.asunto, 50) }}</td>
                 <td>{{ formatDate(denuncia.fecha_creacion) }}</td>
-                <td>{{ denuncia.fecha_envio ? formatDate(denuncia.fecha_envio) : '-' }}</td>
                 <td>
                   <span :class="['pill', 'pill-'+getEstadoKey(denuncia.estado)]">
                     {{ getEstadoLabel(denuncia.estado) }}
                   </span>
+                </td>
+                <td class="row-actions">
+                  <button class="kebab-btn" @click.stop="toggleRowMenu(denuncia.id)" aria-haspopup="menu" :aria-expanded="rowMenuOpen === denuncia.id">⋯</button>
+                  <div v-if="rowMenuOpen === denuncia.id" class="dropdown row-dropdown" role="menu">
+                    <button class="dropdown-item" role="menuitem" @click="openEditModal(denuncia)">Editar</button>
+                    <button class="dropdown-item danger" role="menuitem" @click="handleDelete(denuncia.id)">Borrar</button>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Empty state -->
         <div v-else class="empty-state">
           <p>No tienes denuncias registradas aún.</p>
         </div>
 
-        <!-- Paginación -->
         <div v-if="totalPages > 1" class="pagination">
           <button class="page-btn" @click="goToPage(currentPage - 1)" :disabled="currentPage === 1">‹</button>
           <button 
@@ -98,6 +98,30 @@
           <button class="page-btn" @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages">›</button>
         </div>
       </div>
+
+      <!-- Modal para editar denuncia -->
+      <div v-if="editModalOpen" class="modal-overlay" @click="closeEditModal">
+        <div class="modal" @click.stop>
+          <h3>Editar denuncia</h3>
+          <form @submit.prevent="submitEdit">
+            <label class="field">
+              <span>Asunto</span>
+              <input type="text" v-model="editForm.asunto" required />
+            </label>
+            <label class="field">
+              <span>Detalle</span>
+              <textarea v-model="editForm.detalle" rows="4"></textarea>
+            </label>
+            <div class="modal-actions">
+              <button type="button" class="btn outline" @click="closeEditModal">Cancelar</button>
+              <button type="submit" class="btn primary" :disabled="submitting">
+                {{ submitting ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -106,29 +130,35 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import auth from '@/stores/auth'
-import { getEntidades, getDenuncias } from '@/api/entities'
+import { getEntidades, getDenuncias, updateDenuncia, deleteDenuncia } from '@/api/entities'
 
-// Estados de carga
 const loadingEntidades = ref(true)
 const loadingDenuncias = ref(true)
-
-// Datos desde la API
 const entidades = ref([])
 const denuncias = ref([])
-
-// Paginación
 const currentPage = ref(1)
 const itemsPerPage = 10
 
-// Cargar datos al montar el componente
+// Estados para el menú kebab de cada fila
+const rowMenuOpen = ref(null)
+
+// Estados para el modal de edición
+const editModalOpen = ref(false)
+const editForm = ref({ id: null, asunto: '', detalle: '' })
+const submitting = ref(false)
+
 onMounted(async () => {
   await Promise.all([
     fetchEntidades(),
     fetchDenuncias()
   ])
+  document.addEventListener('click', onRowMenuDocClick)
 })
 
-// Obtener entidades desde la API
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onRowMenuDocClick)
+})
+
 async function fetchEntidades() {
   try {
     loadingEntidades.value = true
@@ -142,7 +172,6 @@ async function fetchEntidades() {
   }
 }
 
-// Obtener denuncias desde la API
 async function fetchDenuncias() {
   try {
     loadingDenuncias.value = true
@@ -156,7 +185,6 @@ async function fetchDenuncias() {
   }
 }
 
-// Descripción por defecto para entidades
 function getEntidadDescription(nombre) {
   const descriptions = {
     'Alcaldía Municipal': 'Denuncias sobre servicios públicos, infraestructura y administración',
@@ -186,7 +214,7 @@ function rotate(dir) {
   startIndex.value = (startIndex.value + (dir > 0 ? 1 : -1) + len) % len
 }
 
-// Formateo de datos
+// Formateo
 function formatRadicado(id, fecha) {
   const year = new Date(fecha).getFullYear()
   return `RAD-${year}-${String(id).padStart(3, '0')}`
@@ -267,6 +295,102 @@ function goToPage(page) {
   }
 }
 
+// Menú kebab de cada fila
+function toggleRowMenu(denunciaId) {
+  if (rowMenuOpen.value === denunciaId) {
+    rowMenuOpen.value = null
+  } else {
+    rowMenuOpen.value = denunciaId
+  }
+}
+
+function closeRowMenu() {
+  rowMenuOpen.value = null
+}
+
+function onRowMenuDocClick(e) {
+  const menus = document.querySelectorAll('.row-actions')
+  let clickedInside = false
+  menus.forEach(menu => {
+    if (menu.contains(e.target)) clickedInside = true
+  })
+  if (!clickedInside) closeRowMenu()
+}
+
+// Modal de edición
+function openEditModal(denuncia) {
+  editForm.value = {
+    id: denuncia.id,
+    asunto: denuncia.asunto || '',
+    detalle: denuncia.detalle || ''
+  }
+  editModalOpen.value = true
+  closeRowMenu()
+}
+
+function closeEditModal() {
+  editModalOpen.value = false
+  editForm.value = { id: null, asunto: '', detalle: '' }
+  submitting.value = false
+}
+
+async function submitEdit() {
+  if (!editForm.value.id) return
+  
+  try {
+    submitting.value = true
+    const payload = {
+      asunto: editForm.value.asunto,
+      detalle: editForm.value.detalle
+    }
+    
+    await updateDenuncia(editForm.value.id, payload)
+    
+    // Actualizar la denuncia en la lista local
+    const index = denuncias.value.findIndex(d => d.id === editForm.value.id)
+    if (index !== -1) {
+      denuncias.value[index] = {
+        ...denuncias.value[index],
+        ...payload
+      }
+    }
+    
+    closeEditModal()
+    alert('Denuncia actualizada correctamente')
+  } catch (error) {
+    console.error('Error al actualizar denuncia:', error)
+    alert('Error al actualizar la denuncia. Por favor intenta de nuevo.')
+  } finally {
+    submitting.value = false
+  }
+}
+
+// Borrar denuncia
+async function handleDelete(denunciaId) {
+  closeRowMenu()
+  
+  if (!confirm('¿Estás seguro de que deseas eliminar esta denuncia? Esta acción no se puede deshacer.')) {
+    return
+  }
+  
+  try {
+    await deleteDenuncia(denunciaId)
+    
+    // Eliminar de la lista local
+    denuncias.value = denuncias.value.filter(d => d.id !== denunciaId)
+    
+    // Ajustar página si es necesario
+    if (paginatedDenuncias.value.length === 0 && currentPage.value > 1) {
+      currentPage.value--
+    }
+    
+    alert('Denuncia eliminada correctamente')
+  } catch (error) {
+    console.error('Error al eliminar denuncia:', error)
+    alert('Error al eliminar la denuncia. Por favor intenta de nuevo.')
+  }
+}
+
 // User menu logic
 const router = useRouter()
 const menuOpen = ref(false)
@@ -330,7 +454,6 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .nav-btn.left{ left:-14px; }
 .nav-btn.right{ right:-14px; }
 
-/* Transiciones del carrusel */
 .slide-left-enter-active, .slide-left-leave-active,
 .slide-right-enter-active, .slide-right-leave-active{ transition: transform .25s ease, opacity .25s ease; }
 .slide-left-enter-from{ transform: translateX(120%); opacity:0; }
@@ -343,8 +466,10 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .muted{ color: var(--muted); margin: 0 0 14px; font-size: 1.05rem; }
 .btn.outline{ display:inline-flex; align-items:center; justify-content:center; padding:12px 18px; border-radius:12px; font-weight:800; text-decoration:none; background:transparent; border:2px solid #111; color:#111; font-size: 1.05rem; }
 .btn.outline:hover{ background:#111; color:#fff; }
+.btn.primary{ background:#2563eb; color:#fff; border:2px solid #2563eb; }
+.btn.primary:hover{ background:#1d4ed8; border-color:#1d4ed8; }
+.btn:disabled{ opacity:0.5; cursor:not-allowed; }
 
-/* user menu styles */
 .user-menu { position: relative; }
 .user-trigger {
   display:flex; align-items:center; gap:10px;
@@ -363,6 +488,8 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .dropdown-header{ padding:10px 12px; font-weight:800; background:#f8fafc; border-bottom:1px solid #e5e7eb; color:#111827; }
 .dropdown-item{ display:block; width:100%; text-align:left; padding:10px 12px; background:#fff; border:none; color:#111827; cursor:pointer; text-decoration:none; }
 .dropdown-item:hover{ background:#f3f4f6; }
+.dropdown-item.danger{ color:#dc2626; }
+.dropdown-item.danger:hover{ background:#fee2e2; }
 
 .card{ background: var(--surface); border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 2px 6px rgba(16,24,40,.06), 0 8px 20px rgba(16,24,40,.06); padding: 24px; }
 .records-head h2{ margin:0; font-weight:800; font-size: clamp(2rem, 2vw, 2.6rem); }
@@ -377,6 +504,85 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .pill-finalizado{ background:#d1fae5; color:#065f46; border: 1px solid rgba(6,95,70,.15); }
 .pill-revision{ background:#fef3c7; color:#92400e; }
 .pill-proceso{ background:#dbeafe; color:#1e40af; }
+
+/* Estilos del menú kebab */
+.row-actions{ position: relative; text-align: center; }
+.kebab-btn{ 
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 12px;
+  color: #6b7280;
+  border-radius: 6px;
+}
+.kebab-btn:hover{ background: #f3f4f6; color: #111827; }
+.row-dropdown{
+  position: absolute;
+  right: 0;
+  top: 100%;
+  margin-top: 4px;
+  min-width: 150px;
+}
+
+/* Modal */
+.modal-overlay{
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+.modal{
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+.modal h3{
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.field{
+  display: block;
+  margin-bottom: 16px;
+}
+.field span{
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #374151;
+}
+.field input,
+.field textarea{
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+.field input:focus,
+.field textarea:focus{
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.modal-actions{
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
 
 .pagination{ display:flex; gap:10px; justify-content:flex-end; padding-top: 16px; flex-wrap:wrap; }
 .page-btn{ min-width: 40px; height: 40px; border-radius: 10px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-size: 1rem; }
