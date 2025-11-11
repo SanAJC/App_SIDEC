@@ -10,8 +10,11 @@ const state = reactive({
 async function loadSession() {
   try {
     state.loading = true
-    const data = await getProfile()
-    state.user = data
+    const response = await getProfile()
+    console.log('loadSession response:', response)
+    // Guardar todo el objeto del usuario, no solo el email
+    state.user = response.data || null
+    console.log('loadSession user:', state.user)
     state.error = null
   } catch (e) {
     state.user = null
@@ -30,9 +33,9 @@ async function logout() {
 }
 
 async function updateProfile(payload) {
-  const data = await apiUpdateProfile(payload)
-  state.user = data
-  return data
+  const response = await apiUpdateProfile(payload)
+  state.user = response.data || null
+  return response.data
 }
 
 export default {

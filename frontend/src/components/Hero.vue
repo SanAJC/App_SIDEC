@@ -6,7 +6,7 @@
         <p class="subtitle">
           Denuncia abusos o malas prácticas de funcionarios públicos de forma segura, confidencial y sencilla. Un sistema transparente creado para proteger tus derechos y fortalecer la rendición de cuentas.
         </p>
-        <router-link to="/login?register=1" class="btn-primary">Regístrate</router-link>
+        <router-link :to="registerButtonLink" class="btn-primary">{{ registerButtonText }}</router-link>
       </div>
       <!-- a la derecha queda la imagen/espacio vacío similar a la referencia -->
     </div>
@@ -14,13 +14,27 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+
 import heroImg from '@/assets/images/foto_landing.jpg';
+import auth from '@/stores/auth'
 
 const bgStyle = {
   backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${heroImg})`,
   backgroundSize: 'cover',
   backgroundPosition: 'center'
 }
+
+// Computed para determinar el destino del botón
+const registerButtonLink = computed(() => {
+  return auth.state.user ? '/dashboard' : '/login?register=1'
+})
+
+// Computed para el texto del botón
+const registerButtonText = computed(() => {
+  return auth.state.user ? 'Ir al Dashboard' : 'Regístrate'
+})
+
 </script>
 
 <style scoped>

@@ -40,7 +40,7 @@
 
       <div class="records card">
         <div class="records-head">
-          <h2>Historial de Radicados</h2>
+          <h3 class="entity-title">Historial de Radicados</h3>
           <p class="muted">Seguimiento de todas tus denuncias y quejas presentadas</p>
         </div>
 
@@ -52,7 +52,7 @@
               <tr>
                 <th>Radicado</th>
                 <th>Entidad</th>
-                <th>Descripción</th>
+                <th>Asunto</th>
                 <th>Fecha Creacion</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -462,7 +462,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .slide-right-leave-to{ transform: translateX(120%); opacity:0; }
 .slide-left-move, .slide-right-move{ transition: transform .25s ease; }
 
-.entity-title{ font-size: 2rem; font-weight: 800; margin: 0 0 8px; color: var(--text); }
+.entity-title{ font-size: 1.6rem; font-weight: 800; margin: 0 0 8px; color: var(--text); }
 .muted{ color: var(--muted); margin: 0 0 14px; font-size: 1.05rem; }
 .btn.outline{ display:inline-flex; align-items:center; justify-content:center; padding:12px 18px; border-radius:12px; font-weight:800; text-decoration:none; background:transparent; border:2px solid #111; color:#111; font-size: 1.05rem; }
 .btn.outline:hover{ background:#111; color:#fff; }
@@ -491,11 +491,11 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .dropdown-item.danger{ color:#dc2626; }
 .dropdown-item.danger:hover{ background:#fee2e2; }
 
-.card{ background: var(--surface); border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 2px 6px rgba(16,24,40,.06), 0 8px 20px rgba(16,24,40,.06); padding: 24px; }
+.card{ background: var(--surface); border: 1px solid #e5e7eb; border-radius: 14px; box-shadow: 0 2px 6px rgba(16,24,40,.06), 0 8px 20px rgba(16,24,40,.06); padding: 24px; height: 600px; }
 .records-head h2{ margin:0; font-weight:800; font-size: clamp(2rem, 2vw, 2.6rem); }
 .records-head .muted{ margin-top: 6px; color: var(--muted); font-size: 1.05rem; }
 
-.table-wrap{ overflow:auto; margin-top: 12px; }
+.table-wrap{ overflow:auto; margin-top: 12px;height: 400px; }
 .table{ width:100%; border-collapse: collapse; font-size: 1rem; }
 .table th, .table td{ text-align:left; padding: 14px 12px; border-bottom: 1px solid #f0f2f5; }
 .table th{ font-weight:800; color: var(--text); font-size: 1.05rem; }
