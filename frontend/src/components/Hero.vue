@@ -56,6 +56,7 @@ const registerButtonText = computed(() => {
   max-width: none; /* sin límite para que el título pueda llegar a 50vw */
   padding-left: 0;
   padding-right: 0;
+  margin-top: 90px;
 }
 .title {
 
